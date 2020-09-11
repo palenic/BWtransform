@@ -2,7 +2,7 @@
 """ Tests for the paleni-bwt module """
 
 import unittest
-import paleni_bwt as bwt
+import bwt as bwt
 
 class TestBWT(unittest.TestCase):
 
@@ -39,6 +39,24 @@ class TestBWT(unittest.TestCase):
         with self.assertRaises(bwt.TerminatorError) as e3:
             bwt.bwInverse(s3)
         self.assertEqual(e3.exception.error_code, 3)
+    
+    
+
+    def test_alternative_terminators(self):
+        s ="oi%oac"
+        with self.assertRaises(bwt.TerminatorError) as e1:
+            bwt.bwInverse(s)
+        self.assertEqual(e1.exception.error_code, 2)
+        with self.assertRaises(bwt.TerminatorError) as e2:
+            bwt.bwTransform(s, 2)
+        self.assertEqual(e2.exception.error_code, 4)
+        with self.assertRaises(bwt.TerminatorError) as e3:
+            bwt.bwTransform(s, "%$")
+        self.assertEqual(e3.exception.error_code, 5)
+        with self.assertRaises(bwt.TerminatorError) as e4:
+            bwt.bwTransform(s, "+")
+        self.assertEqual(e4.exception.error_code, 6)
+        
         
 
 if __name__ == '__main__':

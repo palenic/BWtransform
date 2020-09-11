@@ -57,7 +57,7 @@ class TerminatorError(ValueError):
         super().__init__(self.msg)
         
 
-def bwTransform(x):
+def bwTransform(x, terminator = "$"):
     """
     Compute the Burrows-Wheeler transform of an input string.
 
@@ -116,12 +116,21 @@ def bwTransform(x):
     ## input validation
     if not isinstance(x, str):
         raise TypeError("The input is not a string")
-    if x.find("$")!=-1:
-        raise TerminatorError("The input cannot contain the terminator character ('$'). Please provide another string.",
+    if not isinstance(terminator, str):
+        raise TerminatorError("The terminator must be a string of length 1",
+                              error_code = 4)
+    if len(terminator) != 1:
+        raise TerminatorError("The terminator must be a string of length 1",
+                              error_code = 5)
+    if x.find(terminator) != -1:
+        raise TerminatorError("The input cannot contain the terminator character ('{}'). Please provide another string.".format(terminator),
                               error_code = 1)
-    
     ## adding the terminator
-    x = x + "$"
+    allowed_ter = "$&*-%#"
+    if allowed_ter.find(terminator) == -1:
+        raise TerminatorError("Allowed characters for terminator are: $&*-%# ($ default)",
+                              error_code = 6)
+    x = x + terminator
     N = len(x)
     
     ## sorting all suffixes
@@ -139,7 +148,7 @@ def bwTransform(x):
     coded_seq = "".join([x[i] for i in bwt_indexes])
     return coded_seq
 
-def bwInverse(y):
+def bwInverse(y, terminator= "$"):
     """
     Invert the Burrows-Wheeler transform of a transformed input string.
 
@@ -207,13 +216,22 @@ def bwInverse(y):
     ##input validation 
     if not isinstance(y, str):
         raise TypeError("The input is not a string")
-    if y.find("$") == -1:
-        raise TerminatorError("The input does not contain the terminator character ('$'). Please provide a coded string.",
+    if not isinstance(terminator, str):
+        raise TerminatorError("The terminator must be a string of length 1",
+                              error_code = 4)
+    if len(terminator) != 1:
+        raise TerminatorError("The terminator must be a string of length 1",
+                              error_code = 5)
+    if y.find(terminator) == -1:
+        raise TerminatorError("The input does not contain the terminator character ('{}'). Please provide a coded string.".format(terminator),
                               error_code = 2)
     if len(findall("\$", y)) > 1:
-        raise TerminatorError("The terminator ('$') cannot be present more than once in the coded string. Please provide another string.",
-                              error_code = 3)
-        
+        raise TerminatorError("The terminator ('{}') cannot be present more than once in the coded string. Please provide another string.".format(terminator),
+                              error_code = 3)   
+    allowed_ter = "$&*-%#"
+    if allowed_ter.find(terminator) == -1:
+        raise TerminatorError("Allowed characters for terminator are: $&*-%# ($ default)",
+                              error_code = 6)
     N = len(y)
     ## empty array for counts
     count_L = np.array(np.zeros(N))
@@ -246,7 +264,7 @@ def bwInverse(y):
     ## preceding character. Append them in a vector. Then find character
     ## preceding that one and so on. This gives us the letters of S in 
     ## inverse order (as their position on L)
-    i = y.find("$")
+    i = y.find(terminator)
     decoded_indexes = np.array(np.zeros(N), dtype="int")
     
     for j in range(N-1, -1, -1):
